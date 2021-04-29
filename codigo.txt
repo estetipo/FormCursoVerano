@@ -1,0 +1,33 @@
+function getDatos(){
+  const ss=SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("<Nombre hoja de calculo>");
+  const [header, ...data] = sheet.getDataRange().getDisplayValues();
+  const choices = {}
+  header.forEach(function(title,index){
+    choices[title] = data.map(row => row[index]).filter(e => e => !"");
+  });
+  return choices;
+}
+
+function llenaForm(){
+  const GOOGLE_FORM_ID="<Id del form creado>";
+  const googleForm = FormApp.openById(GOOGLE_FORM_ID);
+  const items = googleForm.getItems();
+  const choices = getDatos();
+  items.forEach(function(item){
+    const itemTitle=item.getTitle();
+    if(itemTitle in choices){
+      switch (item.getType()) {
+        case FormApp.ItemType.CHECKBOX:
+          item.asCheckboxItem().setChoiceValues(choices[itemTitle]);
+        case FormApp.ItemType.LIST:
+          item.asListItem().setChoiceValues(choices[itemTitle]);
+          break;
+        case FormApp.ItemType.MULTIPLE_CHOICE:
+          item.asMultipleChoiceItem().setChoiceValues(choices[itemTitle]);
+          break;
+        default:
+      }
+    }
+  });
+}
